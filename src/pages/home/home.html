@@ -1,14 +1,43 @@
-<ion-header>
-  <ion-navbar>
-    <ion-title>
-      Ionic Blank
-    </ion-title>
-  </ion-navbar>
-</ion-header>
+ion-header>
+<ion-navbar transparent>
+  <ion-title>
+    Users
+  </ion-title>
+  <ion-buttons end>
+    <button ion-button icon-only (click)="addUser()"><ion-icon name="add"></ion-icon></button>
+  </ion-buttons>
+</ion-navbar>
 
-<ion-content padding>
-  The world is your oyster.
-  <p>
-    If you get lost, the <a href="http://ionicframework.com/docs/v2">docs</a> will be your guide.
-  </p>
+
+<ion-content>
+
+  <ion-list no-lines>
+
+    <button (click)="goToLoginForm()">login form</button>
+
+    <ion-item-sliding *ngFor="let user of users">
+
+      <ion-item>
+
+        <ion-avatar item-left>
+          <img src="https://api.adorable.io/avatars/75/{{user.firstName}}">
+        </ion-avatar>
+
+        <h2>{{user.lastName}}</h2>
+        <p>{{user.email}}</p>
+
+        
+
+      </ion-item>
+
+      <ion-item-options>
+        <button ion-button color="danger" (click)="deleteUser(user)">
+          <ion-icon name="trash"></ion-icon>
+          Delete
+        </button>
+      </ion-item-options>
+    </ion-item-sliding>
+
+  </ion-list>
+
 </ion-content>

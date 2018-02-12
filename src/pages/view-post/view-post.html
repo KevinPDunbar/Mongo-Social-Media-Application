@@ -1,0 +1,62 @@
+<ion-header>
+
+  <ion-navbar>
+    <ion-title></ion-title>
+  </ion-navbar>
+
+</ion-header>
+
+
+<ion-content padding>
+
+  <ion-refresher (ionRefresh)="Refresh($event)">
+    <ion-refresher-content pullingIcon="arrow-dropdown"
+                           pullingText="Pull to refresh"
+                           refreshingSpinner="circles"
+                           refreshingText="Refreshing...">
+    </ion-refresher-content>
+  </ion-refresher>
+
+  <ion-card *ngFor="let user of users">
+
+    <ion-item>
+      <ion-avatar item-left>
+        <img src="{{user.photoURL}}" />
+      </ion-avatar>
+      <h2>{{user.name}}</h2>
+      <p>{{user.date}}</p>
+    </ion-item>
+
+    <ion-card-content>
+      <p>{{user.text}}</p>
+      <img src={{user.postPhotoURL}} *ngIf="user.postPhotoURL">
+    </ion-card-content>
+  </ion-card>
+
+
+  <ion-card *ngFor="let comment of comments">
+
+    <ion-item>
+      <ion-avatar item-left>
+        <img src={{comment.photoURL}} />
+      </ion-avatar>
+      <h2>{{comment.name}}</h2>
+      <p>{{comment.date}}</p>
+    </ion-item>
+
+    <ion-card-content>
+      <p>{{comment.text}}</p>
+    </ion-card-content>
+  </ion-card>
+
+
+
+
+  <ion-fab center bottom>
+    <button ion-fab color="danger"><ion-icon name="md-arrow-dropup-circle"></ion-icon></button>
+    <ion-fab-list side="top" (click)="showPrompt()">
+      <button ion-fab color="primary"><ion-icon name="md-add-circle"></ion-icon></button>
+    </ion-fab-list>
+  </ion-fab>
+
+</ion-content>
