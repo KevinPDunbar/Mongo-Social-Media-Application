@@ -82,7 +82,6 @@ export class MyProfilePage {
 
 
      let req = { "userId": this.userId };
-     document.getElementById("user").innerHTML = this.userId;
 
      let userClone = this.users;
 
@@ -170,6 +169,42 @@ export class MyProfilePage {
               }
 
           });
+
+  }
+
+  deletePost(post) {
+
+      
+
+      //Remove locally
+      let index = this.posts.indexOf(post);
+
+      if (index > -1) {
+          this.posts.splice(index, 1);
+      }
+
+      let req = post;
+
+      console.log("Post is: " + post.postId);
+      let headers = new Headers();
+      headers.append('Content-Type', 'application/json');
+
+      this.http.post(URL + '/deletePost', JSON.stringify(req), { headers: headers })
+          .subscribe(res => {
+              //console.log(res.json());
+              if (res.json()) {
+                  console.log(res.json());
+               
+              }
+              else if (!res.json()) {
+                  console.log("nothing");
+              }
+
+          });
+
+
+
+      
 
   }
 

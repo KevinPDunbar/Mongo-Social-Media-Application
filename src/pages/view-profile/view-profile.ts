@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import 'rxjs/add/operator/map';
 import { Http, Headers } from '@angular/http';
 import { IonicPage, NavController, NavParams } from 'ionic-angular';
+import { NativeStorage } from '@ionic-native/native-storage';
 
 const URL = 'http://192.168.2.108:8000/api';
 /**
@@ -22,16 +23,33 @@ export class ViewProfilePage {
     public posts = [];
     public users = [];
 
+    public follows = [];
+    public isFollowing = false;
+
     userId;
+    myId;
 
     public usersName;
     public usersPhoto;
 
-    constructor(public navCtrl: NavController, public navParams: NavParams, public http: Http) {
+    constructor(public navCtrl: NavController, public navParams: NavParams, public http: Http, private nativeStorage: NativeStorage) {
 
         this.passedUserId = navParams.get("userId");
         console.log("PASSED USER ID : " + this.passedUserId);
         this.userId = this.passedUserId;
+
+        this.nativeStorage.getItem('User')
+            .then(
+            (data) => {
+                if (data !== null) {
+                    let id = data.Id;
+                    console.log("THE ID IS: " + id);
+                    this.myId = id;
+                    this.amIFollowing();
+                }
+            }
+
+            )
         
   }
 
@@ -39,6 +57,21 @@ export class ViewProfilePage {
       console.log('ionViewDidLoad ViewProfilePage');
       this.getUser();
       this.getUsersPosts();
+  }
+
+  Refresh(refresher) {
+      console.log('Begin async operation');
+      this.posts = [];
+      this.users = [];
+
+      this.getUser();
+      this.getUsersPosts();
+      this.amIFollowing();
+
+      setTimeout(() => {
+          console.log('Async operation has ended');
+          refresher.complete();
+      }, 2000);
   }
 
   getUser() {
@@ -134,6 +167,110 @@ export class ViewProfilePage {
 
           });
 
+  }
+
+  amIFollowing() {
+
+      let idToFollow = this.passedUserId;
+      let userId = this.myId;
+
+      this.follows = [];
+      let followsClone = this.follows;
+      let following;
+      let amIFollowing = this.isFollowing;
+
+      let req = { "userId": userId };
+
+
+      let headers = new Headers();
+      headers.append('Content-Type', 'application/json');
+
+      this.http.post(URL + '/getUserById', JSON.stringify(req), { headers: headers })
+          .subscribe(res => {
+              //console.log(res.json());
+              if (res.json()) {
+                  console.log(res.json());
+                  following = res.json().following;
+                  console.log("FOLLOWING IS: " + following);
+
+                  for (let i = 0; i < following.length; i++) {
+                      if (following[i] == idToFollow) {
+                          console.log("You are following this user already");
+                          amIFollowing = true;
+                         
+
+                      }
+
+                  }
+
+                  if (amIFollowing === true) {
+                      console.log("You are following this user already");
+                      //followButton.innerHTML = "Unfollow";
+                      followsClone.push({ "following": true });
+                  }
+                  else {
+                      console.log("You are NOT following this user already");
+                      //followButton.innerHTML = "Follow";
+                      followsClone.push({ "following": false });
+                  }
+              }
+              else if (!res.json()) {
+                  console.log("nothing");
+              }
+
+          });
+
+  }
+
+  followUser() {
+
+      let idToFollow = this.passedUserId;
+      let userId = this.myId;
+
+      let following;
+
+      let req = { "userId": userId, "idToFollow": idToFollow };
+
+
+      let headers = new Headers();
+      headers.append('Content-Type', 'application/json');
+
+      this.http.post(URL + '/followUser', JSON.stringify(req), { headers: headers })
+          .subscribe(res => {
+              //console.log(res.json());
+              if (res.json()) {
+                  console.log(res.json());
+                  this.amIFollowing();
+
+              };
+
+          })
+
+  }
+
+  unFollowUser() {
+
+      let idToFollow = this.passedUserId;
+      let userId = this.myId;
+
+      let following;
+
+      let req = { "userId": userId, "idToFollow": idToFollow };
+
+
+      let headers = new Headers();
+      headers.append('Content-Type', 'application/json');
+
+      this.http.post(URL + '/unfollowUser', JSON.stringify(req), { headers: headers })
+          .subscribe(res => {
+              //console.log(res.json());
+              if (res.json()) {
+                  console.log(res.json());
+                  this.amIFollowing();
+
+              };
+
+          })
   }
 
 }

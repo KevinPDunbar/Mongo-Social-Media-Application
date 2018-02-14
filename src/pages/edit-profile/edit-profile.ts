@@ -41,11 +41,6 @@ export class EditProfilePage {
             aboutMe: ['', Validators.compose([Validators.required])]
         });
 
-        
-    }
-
-    ionViewDidLoad() {
-
         console.log('ionViewDidLoad MyProfilePage');
         this.nativeStorage.getItem('User')
             .then(
@@ -60,6 +55,13 @@ export class EditProfilePage {
             }
 
             )
+
+        
+    }
+
+    ionViewDidLoad() {
+
+        
   }
 
   Refresh(refresher) {
@@ -85,7 +87,7 @@ export class EditProfilePage {
 
 
       let req = { "userId": this.userId };
-      document.getElementById("user").innerHTML = this.userId;
+      
 
       let userClone = this.users;
 
