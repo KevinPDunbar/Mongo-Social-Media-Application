@@ -5,8 +5,10 @@ import { Http, Headers } from '@angular/http';
 import { NativeStorage } from '@ionic-native/native-storage';
 import { ViewProfilePage } from '../view-profile/view-profile';
 import { MyProfilePage } from '../my-profile/my-profile';
+import { NotificationsPage } from '../notifications/notifications';
 
-const URL = 'http://192.168.2.108:8000/api';
+
+const URL = 'http://192.168.2.115:8000/api';
 
 /**
  * Generated class for the SearchPage page.
@@ -24,6 +26,7 @@ export class SearchPage {
 
     userId: any;
     public users = [];
+    public unreadNotifications = [];
 
     constructor(public navCtrl: NavController, public navParams: NavParams, public http: Http, private nativeStorage: NativeStorage) {
 
@@ -36,6 +39,7 @@ export class SearchPage {
                     let id = data.Id;
                     console.log("THE ID IS: " + id);
                     this.userId = id;
+                    this.getUnreadCount();
                 }
             }
 
@@ -46,6 +50,42 @@ export class SearchPage {
     console.log('ionViewDidLoad SearchPage');
   }
 
+  goToNotificationsPage() {
+      this.navCtrl.push(NotificationsPage);
+  }
+
+  getUnreadCount() {
+
+      let myId = this.userId;
+      let unreadClone = this.unreadNotifications;
+
+      let req = { "userId": this.userId };
+
+
+      let headers = new Headers();
+      headers.append('Content-Type', 'application/json');
+
+      this.http.post(URL + '/getUnreadCount', JSON.stringify(req), { headers: headers })
+          .subscribe(res => {
+              //console.log(res.json());
+              if (res.json()) {
+                  console.log("Unread Response: " + res.json());
+                  console.log("Ledngth: " + res.json().length);
+
+                  for (let i = 0; i < res.json().length; i++) {
+                      unreadClone.push(1);
+                  }
+
+
+
+              }
+              else if (!res.json()) {
+                  console.log("nothing");
+              }
+
+          });
+  }
+
   search($event) {
 
 
@@ -54,7 +94,7 @@ export class SearchPage {
 
       let results = this.users;
 
-      let term = $event.target.value
+      let term = $event.target.value || '';
       console.log("Q IS: " + term);
 
       let q = { "term": term };

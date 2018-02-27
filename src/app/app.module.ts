@@ -17,8 +17,10 @@ import { ViewProfilePage } from '../pages/view-profile/view-profile';
 import { SearchPage } from '../pages/search/search';
 import { EditProfilePage } from '../pages/edit-profile/edit-profile';
 import { ViewPostPage } from '../pages/view-post/view-post';
+import { NotificationsPage } from '../pages/notifications/notifications';
 import { NativeStorage } from '@ionic-native/native-storage';
 import { Camera, CameraOptions } from '@ionic-native/camera';
+
 
 
 @NgModule({
@@ -33,7 +35,8 @@ import { Camera, CameraOptions } from '@ionic-native/camera';
       ViewProfilePage,
       SearchPage,
       EditProfilePage,
-      ViewPostPage
+      ViewPostPage,
+      NotificationsPage
       
   ],
   imports: [
@@ -53,7 +56,8 @@ import { Camera, CameraOptions } from '@ionic-native/camera';
       ViewProfilePage,
       SearchPage,
       EditProfilePage,
-      ViewPostPage
+      ViewPostPage,
+      NotificationsPage
   ],
   providers: [
     StatusBar,

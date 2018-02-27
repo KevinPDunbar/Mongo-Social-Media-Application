@@ -5,8 +5,12 @@ import { Http, Headers } from '@angular/http';
 import { NativeStorage } from '@ionic-native/native-storage';
 import { Camera, CameraOptions } from '@ionic-native/camera';
 import { FormBuilder, Validators } from '@angular/forms';
+import { AuthDataProvider } from '../../providers/auth-data/auth-data';
 
-const URL = 'http://192.168.2.108:8000/api';
+import { LoginFormPage } from '../login-form/login-form';
+import { NotificationsPage } from '../notifications/notifications';
+
+const URL = 'http://192.168.43.226:8000/api';
 
 /**
  * Generated class for the EditProfilePage page.
@@ -24,6 +28,7 @@ export class EditProfilePage {
 
     public posts = [];
     public users = [];
+    public unreadNotifications = [];
 
     userId: any;
 
@@ -31,7 +36,7 @@ export class EditProfilePage {
 
     public editProfileForm;
 
-    constructor(public navCtrl: NavController, public navParams: NavParams, private nativeStorage: NativeStorage, public http: Http, private camera: Camera, public formBuilder: FormBuilder) {
+    constructor(public navCtrl: NavController, public navParams: NavParams, private nativeStorage: NativeStorage, public http: Http, private camera: Camera, public formBuilder: FormBuilder, public AuthDataProvider: AuthDataProvider) {
 
        
 
@@ -50,7 +55,8 @@ export class EditProfilePage {
                     console.log("THE ID IS: " + id);
                     this.userId = id;
                     this.getUser();
-                    this.getMyPosts();
+                    this.getUnreadCount();
+                    //this.getMyPosts();
                 }
             }
 
@@ -68,13 +74,51 @@ export class EditProfilePage {
       console.log('Begin async operation');
       this.posts = [];
       this.users = [];
+      this.unreadNotifications = [];
       this.getUser();
       this.getMyPosts();
+      this.getUnreadCount();
 
       setTimeout(() => {
           console.log('Async operation has ended');
           refresher.complete();
       }, 2000);
+  }
+
+  goToNotificationsPage() {
+      this.navCtrl.push(NotificationsPage);
+  }
+
+  getUnreadCount() {
+
+      let myId = this.userId;
+      let unreadClone = this.unreadNotifications;
+
+      let req = { "userId": this.userId };
+
+
+      let headers = new Headers();
+      headers.append('Content-Type', 'application/json');
+
+      this.http.post(URL + '/getUnreadCount', JSON.stringify(req), { headers: headers })
+          .subscribe(res => {
+              //console.log(res.json());
+              if (res.json()) {
+                  console.log("Unread Response: " + res.json());
+                  console.log("Ledngth: " + res.json().length);
+
+                  for (let i = 0; i < res.json().length; i++) {
+                      unreadClone.push(1);
+                  }
+
+
+
+              }
+              else if (!res.json()) {
+                  console.log("nothing");
+              }
+
+          });
   }
 
   getUser() {
@@ -264,6 +308,13 @@ export class EditProfilePage {
           });
 
 
+  }
+
+  logOut() {
+      this.AuthDataProvider.logoutUser();
+
+      this.navCtrl.setRoot(LoginFormPage);
+      
   }
   
 

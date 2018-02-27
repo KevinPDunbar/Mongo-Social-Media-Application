@@ -1,14 +1,10 @@
-<!--
-  Generated template for the ViewProfilePage page.
-
-  See http://ionicframework.com/docs/components/#navigation for more info on
-  Ionic pages and navigation.
--->
 <ion-header>
 
 
-  <ion-navbar>
+  <ion-navbar ng-repeat="unreadNotification in unreadNotifications">
     <ion-title></ion-title>
+    <span class="notificationIconNumber" *ngIf="unreadNotifications?.length > 0">{{unreadNotifications.length}}</span>
+    <ion-icon (click)="goToNotificationsPage()" class="notificationIcon" name="ios-notifications-outline"></ion-icon>
   </ion-navbar>
 
 </ion-header>
@@ -58,8 +54,17 @@
       <p>{{post.text}}</p>
       <img class="postImage" src={{post.postPhotoURL}} *ngIf="post.postPhotoURL">
 
-      <ion-badge item-end>{{post.score}}</ion-badge>
-      <ion-badge style="float: right;" (click)="viewPost(post.userId, post.postId)" item-end>View Replies</ion-badge>
+      <button *ngIf="post.haveILiked === true" [ngClass]="post.haveILiked === true ? 'likedPost': ''" (click)="unlikePost(post, post.userId, post.postId)" ion-button icon-only>
+        <ion-icon name="heart"></ion-icon>
+        <p>{{post.score}}</p>
+      </button>
+
+      <button *ngIf="post.haveILiked === false" [ngClass]="post.haveILiked === false ? 'notLikedPost': ''" (click)="likePost(post, post.userId, post.postId)" ion-button icon-only>
+        <ion-icon name="heart"></ion-icon>
+        <p>{{post.score}}</p>
+      </button>
+
+      <ion-badge style="float: right;" (click)="viewPost(post.userId, post.postId)" item-end>Replies {{post.commentLength}}</ion-badge>
     </ion-card-content>
   </ion-card>
 

@@ -3,8 +3,11 @@ import 'rxjs/add/operator/map';
 import { Http, Headers } from '@angular/http';
 import { IonicPage, NavController, NavParams } from 'ionic-angular';
 import { NativeStorage } from '@ionic-native/native-storage';
+import { NotificationsPage } from '../notifications/notifications';
+import { ViewPostPage } from '../view-post/view-post';
 
-const URL = 'http://192.168.2.108:8000/api';
+
+const URL = 'http://192.168.2.115:8000/api';
 /**
  * Generated class for the ViewProfilePage page.
  *
@@ -22,6 +25,7 @@ export class ViewProfilePage {
     public passedUserId;
     public posts = [];
     public users = [];
+    public unreadNotifications = [];
 
     public follows = [];
     public isFollowing = false;
@@ -46,6 +50,7 @@ export class ViewProfilePage {
                     console.log("THE ID IS: " + id);
                     this.myId = id;
                     this.amIFollowing();
+                    this.getUnreadCount();
                 }
             }
 
@@ -63,15 +68,53 @@ export class ViewProfilePage {
       console.log('Begin async operation');
       this.posts = [];
       this.users = [];
+      this.unreadNotifications = [];
 
       this.getUser();
       this.getUsersPosts();
       this.amIFollowing();
+      this.getUnreadCount();
 
       setTimeout(() => {
           console.log('Async operation has ended');
           refresher.complete();
       }, 2000);
+  }
+
+  goToNotificationsPage() {
+      this.navCtrl.push(NotificationsPage);
+  }
+
+  getUnreadCount() {
+
+      let myId = this.userId;
+      let unreadClone = this.unreadNotifications;
+
+      let req = { "userId": this.userId };
+
+
+      let headers = new Headers();
+      headers.append('Content-Type', 'application/json');
+
+      this.http.post(URL + '/getUnreadCount', JSON.stringify(req), { headers: headers })
+          .subscribe(res => {
+              //console.log(res.json());
+              if (res.json()) {
+                  console.log("Unread Response: " + res.json());
+                  console.log("Ledngth: " + res.json().length);
+
+                  for (let i = 0; i < res.json().length; i++) {
+                      unreadClone.push(1);
+                  }
+
+
+
+              }
+              else if (!res.json()) {
+                  console.log("nothing");
+              }
+
+          });
   }
 
   getUser() {
@@ -119,6 +162,7 @@ export class ViewProfilePage {
       let text;
       let score;
       let date;
+      let postUserId;
       let postPhotoURL;
 
       let req = { "userId": this.userId };
@@ -144,6 +188,7 @@ export class ViewProfilePage {
                       date = content[i].date;
                       score = content[i].score;
                       postPhotoURL = content[i].image;
+                      postUserId = content[i].userId;
 
                       let d = new Date(date);
                       let day = d.getDay();
@@ -152,7 +197,51 @@ export class ViewProfilePage {
 
                       let newDate = day + '/' + month + '/' + year;
 
-                      postClone.push({ "postId": postId, "name": this.usersName, "text": text, "date": newDate, "score": score, "postPhotoURL": postPhotoURL, "photoURL": this.usersPhoto });
+                      //
+                      let reqq = { "_id": postId };
+
+                      this.http.post(URL + '/getCommentsById', JSON.stringify(reqq), { headers: headers })
+                          .subscribe(res => {
+                              //console.log(res.json());
+                              if (res.json()) {
+
+                                  console.log("Commetns Lenght: " + res.json().length);
+                                  let commentLength = res.json().length;
+                                  postClone[i].commentLength = commentLength;
+
+                              }
+                              else if (!res.json()) {
+                                  console.log("nothing");
+                              }
+
+                          });
+
+                      //
+                      this.http.post(URL + '/getLikesById', JSON.stringify(reqq), { headers: headers })
+                          .subscribe(res => {
+                              //console.log(res.json());
+                              if (res.json()) {
+
+                                  console.log("Likes are: " + res.json().length);
+
+                                  let haveILiked = false;
+                                  for (let i = 0; i < res.json().length; i++) {
+                                      if (res.json()[i].userId === this.userId) {
+                                          haveILiked = true;
+                                      }
+                                  }
+
+                                  postClone[i].haveILiked = haveILiked;
+                                  //postClone[i].likes = res.json();
+
+                              }
+                              else if (!res.json()) {
+                                  console.log("nothing");
+                              }
+
+                          });
+                      //
+                      postClone.push({ "postId": postId, "name": this.usersName, "text": text, "date": newDate, "score": score, "postPhotoURL": postPhotoURL, "photoURL": this.usersPhoto, "likes": "", "haveILiked": "", "userId": postUserId });
                   }
 
 
@@ -242,6 +331,28 @@ export class ViewProfilePage {
                   console.log(res.json());
                   this.amIFollowing();
 
+                  //
+                  let headers = new Headers();
+                  headers.append('Content-Type', 'application/json');
+
+                  let date = new Date();
+
+                  let notification = { "recieveId": idToFollow, "pusherId": userId, "subject": "follow", "read": false, "commentOwnerId": "", "postId": "", "date": date };
+
+                  this.http.post(URL + '/newNotification', JSON.stringify(notification), { headers: headers })
+                      .subscribe(res => {
+                          //console.log(res.json());
+                          if (res.json()) {
+                              console.log(res.json());
+
+
+                          }
+                          else if (!res.json()) {
+                              console.log("nothing");
+                          }
+
+                      });
+                  //
               };
 
           })
@@ -271,6 +382,112 @@ export class ViewProfilePage {
               };
 
           })
+  }
+
+  viewPost(userId, postId) {
+
+      // this.navCtrl.push(ViewProfilePage);
+
+      this.navCtrl.push(ViewPostPage, {
+          userId: userId,
+          postId: postId
+      })
+  }
+
+  likePost(post, userId, postId) {
+
+      let ownerId = userId;
+      let myId = this.userId;
+      let likes = [];
+
+      console.log("post: " + post.postId);
+      for (let i = 0; i < this.posts.length; i++)
+          if (this.posts[i].postId === postId) {
+              console.log("POST FOUND and liked");
+              this.posts[i].haveILiked = true;
+              this.posts[i].score++;
+              break;
+          }
+
+      let h = new Headers();
+      h.append('Content-Type', 'application/json');
+
+      let reqq = { "userId": myId, "postId": postId };
+
+      this.http.post(URL + '/likePost', JSON.stringify(reqq), { headers: h })
+          .subscribe(res => {
+              //console.log(res.json());
+              if (res.json()) {
+
+                  console.log("Like Successful");
+                  let headers = new Headers();
+                  headers.append('Content-Type', 'application/json');
+
+                  let date = new Date();
+
+                  let notification = { "recieveId": ownerId, "pusherId": myId, "subject": "like", "read": false, "commentOwnerId": ownerId, "postId": postId, "date": date };
+
+                  this.http.post(URL + '/newNotification', JSON.stringify(notification), { headers: headers })
+                      .subscribe(res => {
+                          //console.log(res.json());
+                          if (res.json()) {
+                              console.log(res.json());
+
+
+                          }
+                          else if (!res.json()) {
+                              console.log("nothing");
+                          }
+
+                      });
+
+              }
+              else if (!res.json()) {
+                  console.log("nothing");
+              }
+
+          });
+
+  }
+
+  unlikePost(post, userId, postId) {
+
+      let ownerId = userId;
+      let myId = this.userId;
+      let likes = [];
+      let updatedLikes = [];
+
+      console.log("post: " + post.postId);
+      for (let i = 0; i < this.posts.length; i++)
+          if (this.posts[i].postId === postId) {
+              console.log("POST FOUND and unliked");
+              this.posts[i].haveILiked = false;
+              this.posts[i].score--;
+              break;
+          }
+
+      let h = new Headers();
+      h.append('Content-Type', 'application/json');
+
+      let reqq = { "userId": myId, "postId": postId };
+
+      this.http.post(URL + '/unlikePost', JSON.stringify(reqq), { headers: h })
+          .subscribe(res => {
+              //console.log(res.json());
+              if (res.json()) {
+
+                  console.log("Unlike Successful");
+
+              }
+              else if (!res.json()) {
+                  console.log("nothing");
+              }
+
+          });
+
+
+
+
   }
 
 }

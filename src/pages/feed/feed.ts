@@ -10,8 +10,10 @@ import { MyProfilePage } from '../my-profile/my-profile';
 import { ViewProfilePage } from '../view-profile/view-profile';
 import { SearchPage } from '../search/search';
 import { ViewPostPage } from '../view-post/view-post';
+import { NotificationsPage } from '../notifications/notifications';
 
-const URL = 'http://192.168.2.108:8000/api';
+
+const URL = 'http://192.168.2.115:8000/api';
 /**
  * Generated class for the FeedPage page.
  *
@@ -29,6 +31,7 @@ export class FeedPage {
     userId: any;
     public items = [];
     public users = [];
+    public unreadNotifications = [];
 
     constructor(public navCtrl: NavController, public navParams: NavParams, public alertCtrl: AlertController, public http: Http, private nativeStorage: NativeStorage, private camera: Camera) {
 
@@ -42,6 +45,7 @@ export class FeedPage {
                     console.log("THE ID IS: " + id);
                     this.userId = id;
                     this.whoAmIFollowing();
+                    this.getUnreadCount();
                 }
             }
 
@@ -58,12 +62,51 @@ export class FeedPage {
       console.log('Begin async operation');
       this.items = [];
       this.users = [];
+      this.unreadNotifications = [];
       this.whoAmIFollowing();
+      this.getUnreadCount();
 
       setTimeout(() => {
           console.log('Async operation has ended');
           refresher.complete();
       }, 2000);
+  }
+
+  goToNotificationsPage()
+  {
+      this.navCtrl.push(NotificationsPage);
+  }
+  
+  getUnreadCount() {
+
+      let myId = this.userId;
+      let unreadClone = this.unreadNotifications;
+
+      let req = { "userId": this.userId };
+
+      let headers = new Headers();
+      headers.append('Content-Type', 'application/json');
+
+      this.http.post(URL + '/getUnreadCount', JSON.stringify(req), { headers: headers })
+          .subscribe(res => {
+              //console.log(res.json());
+              if (res.json()) {
+                  console.log("Unread Response: " + res.json());
+                  console.log("Ledngth: " + res.json().length);
+                  
+                  for (let i = 0; i < res.json().length; i++)
+                  {
+                      unreadClone.push(1);
+                  }
+
+
+                
+              }
+              else if (!res.json()) {
+                  console.log("nothing");
+              }
+
+          });
   }
 
   whoAmIFollowing()
@@ -99,6 +142,8 @@ export class FeedPage {
                   let posterName;
                   let posterPhotoUrl;
 
+                  let commentLength;
+
                   followingResponse = res.json();
                   let response = res.json();
                   console.log("Following response: " + res.json());
@@ -112,6 +157,53 @@ export class FeedPage {
                       postDate = response[i].date;
                       postScore = response[i].score;
                       postPhotoURL = response[i].image;
+
+                      let h = new Headers();
+                      h.append('Content-Type', 'application/json');
+
+                      let reqq = { "_id": postId };
+
+                      this.http.post(URL + '/getCommentsById', JSON.stringify(reqq), { headers: h })
+                          .subscribe(res => {
+                              //console.log(res.json());
+                              if (res.json()) {
+
+                                  console.log("Commetns Lenght: " + res.json().length);
+                                  commentLength = res.json().length;
+                                  postClone[i].commentLength = commentLength;
+
+                              }
+                              else if (!res.json()) {
+                                  console.log("nothing");
+                              }
+
+                          });
+
+                      this.http.post(URL + '/getLikesById', JSON.stringify(reqq), { headers: h })
+                          .subscribe(res => {
+                              //console.log(res.json());
+                              if (res.json()) {
+
+                                  console.log("Likes are: " + res.json().length);
+                                  commentLength = res.json().length;
+                                  let haveILiked = false;
+                                  for (let i = 0; i < res.json().length; i++)
+                                  {
+                                      if (res.json()[i].userId === this.userId)
+                                      {
+                                          haveILiked = true;
+                                      }
+                                  }
+
+                                  postClone[i].haveILiked = haveILiked;
+                                  //postClone[i].likes = res.json();
+
+                              }
+                              else if (!res.json()) {
+                                  console.log("nothing");
+                              }
+
+                          });
 
                       //
                       let headers = new Headers();
@@ -153,8 +245,8 @@ export class FeedPage {
                       let year = d.getFullYear();
 
                       let newDate = day + '/' + month + '/' + year;
-                      
-                      postClone.push({ "postId": postId, "userId": userId, "name": "", "text": postText, "date": newDate, "score": postScore, "photoURL": "", "postPhotoURL": postPhotoURL });
+
+                      postClone.push({ "postId": postId, "userId": userId, "name": "", "text": postText, "date": newDate, "score": postScore, "photoURL": "", "postPhotoURL": postPhotoURL, "commentLength": commentLength, "likes": "", "haveILiked": "" });
 
 
                   }
@@ -166,8 +258,104 @@ export class FeedPage {
 
           });
 
+  
       
-      
+
+  }
+
+  likePost(post, userId, postId) {
+
+      let ownerId = userId;
+      let myId = this.userId;
+      let likes = [];
+
+      console.log("post: " + post.postId);
+      for (let i = 0; i < this.items.length; i++)
+          if (this.items[i].postId === postId) {
+              console.log("POST FOUND and liked");
+              this.items[i].haveILiked = true;
+              this.items[i].score++;
+              break;
+          }
+
+      let h = new Headers();
+      h.append('Content-Type', 'application/json');
+
+      let reqq = { "userId": myId, "postId": postId };
+
+      this.http.post(URL + '/likePost', JSON.stringify(reqq), { headers: h })
+          .subscribe(res => {
+              //console.log(res.json());
+              if (res.json()) {
+
+                  console.log("Like Successful");
+                  let headers = new Headers();
+                  headers.append('Content-Type', 'application/json');
+
+                  let date = new Date();
+
+                  let notification = { "recieveId": ownerId, "pusherId": myId, "subject": "like", "read": false, "commentOwnerId": ownerId, "postId": postId, "date": date };
+
+                  this.http.post(URL + '/newNotification', JSON.stringify(notification), { headers: headers })
+                      .subscribe(res => {
+                          //console.log(res.json());
+                          if (res.json()) {
+                              console.log(res.json());
+
+
+                          }
+                          else if (!res.json()) {
+                              console.log("nothing");
+                          }
+
+                      });
+
+              }
+              else if (!res.json()) {
+                  console.log("nothing");
+              }
+
+          }); 
+
+  }
+
+  unlikePost(post, userId, postId) {
+
+      let ownerId = userId;
+      let myId = this.userId;
+      let likes = [];
+      let updatedLikes = [];
+
+      console.log("post: " + post.postId);
+      for (let i = 0; i < this.items.length; i++)
+          if (this.items[i].postId === postId) {
+              console.log("POST FOUND and unliked");
+              this.items[i].haveILiked = false;
+              this.items[i].score--;
+              break;
+          }
+
+      let h = new Headers();
+      h.append('Content-Type', 'application/json');
+
+      let reqq = { "userId": myId, "postId": postId };
+
+      this.http.post(URL + '/unlikePost', JSON.stringify(reqq), { headers: h })
+          .subscribe(res => {
+              //console.log(res.json());
+              if (res.json()) {
+
+                  console.log("Unlike Successful");
+
+              }
+              else if (!res.json()) {
+                  console.log("nothing");
+              }
+
+          }); 
+
+ 
+
 
   }
 

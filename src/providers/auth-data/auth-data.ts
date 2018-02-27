@@ -1,14 +1,19 @@
+import { Component } from '@angular/core';
+import { AlertController } from 'ionic-angular';
+import { IonicPage, NavController, NavParams } from 'ionic-angular';
+
 import { HttpClient } from '@angular/common/http';
 import { Http, Headers } from '@angular/http';
 import { Injectable } from '@angular/core';
-import { ModalController } from 'ionic-angular';
 import 'rxjs/add/operator/map';
 
 import { NativeStorage } from '@ionic-native/native-storage';
 
 import { LoginFormPage } from '../../pages/login-form/login-form';
+import { FeedPage } from '../../pages/feed/feed';
 
-const URL = 'http://192.168.2.108:8000/api';
+
+const URL = 'http://192.168.2.115:8000/api';
 
 /*
   Generated class for the AuthDataProvider provider.
@@ -21,7 +26,7 @@ export class AuthDataProvider {
 
     data: any;
 
-  constructor(/*public http: HttpClient,*/ public http: Http, private nativeStorage: NativeStorage) {
+    constructor(public http: Http, private nativeStorage: NativeStorage) {
       console.log('Hello AuthDataProvider Provider');
       this.data = null;
   }
@@ -47,6 +52,18 @@ export class AuthDataProvider {
                       );
 
 
+                  this.nativeStorage.getItem('User')
+                      .then(
+                      (data) => {
+                          if (data !== null) {
+                              let id = data.Id;
+                              console.log("ITEM FOUND");
+                              //this.navCtrl.setRoot(FeedPage);
+                              
+                          }
+                      }
+
+                      )
               }
               else if(!res.json()) {
                   console.log("nothing");
@@ -55,6 +72,16 @@ export class AuthDataProvider {
           });
       
 
+  }
+
+  logoutUser() {
+      this.nativeStorage.remove('User')
+          .then(
+          () => console.log('item Removed!'),
+          error => console.error('Error removing item', error)
+          );
+
+      
   }
 
     getUsers() {
