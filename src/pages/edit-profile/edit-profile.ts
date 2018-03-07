@@ -10,7 +10,7 @@ import { AuthDataProvider } from '../../providers/auth-data/auth-data';
 import { LoginFormPage } from '../login-form/login-form';
 import { NotificationsPage } from '../notifications/notifications';
 
-const URL = 'http://192.168.43.226:8000/api';
+const URL = 'http://192.168.2.125:8000/api';
 
 /**
  * Generated class for the EditProfilePage page.

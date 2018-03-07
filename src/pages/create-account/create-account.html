@@ -9,33 +9,33 @@
 
 <ion-content>
 
-  <ion-list no-lines>
+  <section class="loginForm">
+    <ion-list no-lines>
 
-    <ion-item>
-      <ion-label floating>First Name</ion-label>
-      <ion-input [(ngModel)]="firstName" type="text"></ion-input>
-    </ion-item>
+      <ion-item>
+        <ion-label floating>First Name</ion-label>
+        <ion-input [(ngModel)]="firstName" type="text"></ion-input>
+      </ion-item>
 
-    <ion-item>
-      <ion-label floating>Last Name</ion-label>
-      <ion-textarea [(ngModel)]="lastName"></ion-textarea>
-    </ion-item>
+      <ion-item>
+        <ion-label floating>Last Name</ion-label>
+        <ion-textarea [(ngModel)]="lastName"></ion-textarea>
+      </ion-item>
+      <ion-item>
+        <ion-label floating>Email</ion-label>
+        <ion-input [(ngModel)]="email" type="text"></ion-input>
+      </ion-item>
 
-    <ion-item>
-      <ion-label floating>Email</ion-label>
-      <ion-input [(ngModel)]="email" type="text"></ion-input>
-    </ion-item>
-
-    <ion-item>
-      <ion-label floating>Password</ion-label>
-      <ion-textarea [(ngModel)]="password"></ion-textarea>
-    </ion-item>
+      <ion-item>
+        <ion-label floating>Password</ion-label>
+        <ion-textarea [(ngModel)]="password"></ion-textarea>
+      </ion-item>
 
 
-    
 
-  </ion-list>
 
-  <button ion-button full color="secondary" (click)="save()">Save</button>
+    </ion-list>
 
+    <button ion-button full color="secondary" (click)="save()">Save</button>
+  </section>
 </ion-content>

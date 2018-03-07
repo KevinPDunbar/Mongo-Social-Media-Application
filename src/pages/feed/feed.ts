@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { AlertController } from 'ionic-angular';  
-import { IonicPage, NavController, NavParams } from 'ionic-angular';
+import { IonicPage, NavController, NavParams, ModalController, ModalOptions  } from 'ionic-angular';
 import { HttpClient } from '@angular/common/http';
 import { NativeStorage } from '@ionic-native/native-storage';
 import { Http, Headers } from '@angular/http';
@@ -12,8 +12,14 @@ import { SearchPage } from '../search/search';
 import { ViewPostPage } from '../view-post/view-post';
 import { NotificationsPage } from '../notifications/notifications';
 
+import { MediaCapture, MediaFile, CaptureError, CaptureImageOptions, CaptureVideoOptions } from '@ionic-native/media-capture';
+import { StreamingMedia, StreamingVideoOptions, StreamingAudioOptions } from '@ionic-native/streaming-media';
+import { Media, MediaObject } from '@ionic-native/media';
+import { File } from '@ionic-native/file';
+import { VideoEditor, CreateThumbnailOptions } from '@ionic-native/video-editor';
 
-const URL = 'http://192.168.2.115:8000/api';
+
+const URL = 'http://192.168.2.125:8000/api';
 /**
  * Generated class for the FeedPage page.
  *
@@ -33,7 +39,7 @@ export class FeedPage {
     public users = [];
     public unreadNotifications = [];
 
-    constructor(public navCtrl: NavController, public navParams: NavParams, public alertCtrl: AlertController, public http: Http, private nativeStorage: NativeStorage, private camera: Camera) {
+    constructor(public navCtrl: NavController, public navParams: NavParams, public alertCtrl: AlertController, public http: Http, private nativeStorage: NativeStorage, private camera: Camera, private modal: ModalController, private mediaCapture: MediaCapture, private media: Media, private file: File, private streamingMedia: StreamingMedia, private videoEditor: VideoEditor) {
 
         let id = this.userId;
 
@@ -70,6 +76,21 @@ export class FeedPage {
           console.log('Async operation has ended');
           refresher.complete();
       }, 2000);
+  }
+
+  openModal(userId, postId) {
+
+      const options: ModalOptions = {
+          showBackdrop: true,
+          enableBackdropDismiss: true,
+          enterAnimation: 'modal-scale-up-enter',
+          leaveAnimation: 'modal-scale-up-leave',
+
+      }
+
+      const myModal = this.modal.create(ViewPostPage, { userId, postId }, options);
+
+      myModal.present();
   }
 
   goToNotificationsPage()
@@ -113,6 +134,23 @@ export class FeedPage {
   {
       let userClone = this.users;
       let postClone = this.items;
+
+      function msToTime(s) {
+          var ms = s % 1000;
+          s = (s - ms) / 1000;
+          var secs = s % 60;
+          s = (s - secs) / 60;
+          var mins = s % 60;
+          var hrs = (s - mins) / 60;
+          if (hrs == 0 && mins == 0)
+              return 'just now';
+          else if (hrs == 0)
+              return mins + ' mins ago';
+          else if (hrs < 24)
+              return hrs + ' hours ago';
+          else
+              return Math.floor(hrs / 24) + ' days ago';
+      }
 
       let id;
       let firstName;
@@ -237,6 +275,18 @@ export class FeedPage {
                               }
 
                           });
+
+                      //
+                      let now = new Date().getTime();
+                      let past = new Date(postDate).getTime();
+
+                      let diff = msToTime(now - past);
+
+                      console.log(diff.toString());
+
+                      
+                                    //
+
                       //
 
                       let d = new Date(postDate);
@@ -246,7 +296,7 @@ export class FeedPage {
 
                       let newDate = day + '/' + month + '/' + year;
 
-                      postClone.push({ "postId": postId, "userId": userId, "name": "", "text": postText, "date": newDate, "score": postScore, "photoURL": "", "postPhotoURL": postPhotoURL, "commentLength": commentLength, "likes": "", "haveILiked": "" });
+                      postClone.push({ "postId": postId, "userId": userId, "name": "", "text": postText, "date": diff, "score": postScore, "photoURL": "", "postPhotoURL": postPhotoURL, "commentLength": commentLength, "likes": "", "haveILiked": "" });
 
 
                   }
@@ -454,10 +504,7 @@ export class FeedPage {
       this.navCtrl.push(SearchPage);
   }
 
-  async postPhoto() {
-
-      
-      
+  async postPhoto() { 
 
       try {
           const options: CameraOptions = {
@@ -509,6 +556,68 @@ export class FeedPage {
       catch (e) {
           console.log(e);
       }
+
+
+  }
+
+  postVideo() {
+
+      //let userId = firebase.auth().currentUser.uid;
+      //const time = firebase.database.ServerValue.TIMESTAMP;
+
+      this.mediaCapture.captureVideo({ limit: 1, duration: 30, quality: 0 }).then((data: MediaFile[]) => {
+          let index = data[0].fullPath.lastIndexOf('/'), finalPath = data[0].fullPath.substr(0, index);
+          this.file.readAsArrayBuffer(finalPath, data[0].name).then((file) => {
+
+             
+              let blob = new Blob([file], { type: data[0].type });
+
+
+              var dataURI;
+
+              var reader = new FileReader();
+
+              reader.onload = function () {
+                  // here you'll call what to do with the base64 string result
+                  dataURI = this.result;
+                  console.log(dataURI);
+              };
+
+              
+
+              //
+
+              let date = new Date();
+              console.log("DATE IS: " + date);
+
+              let post = {
+                  "userId": this.userId,
+                  "text": "",
+                  "date": date,
+                  "score": 1,
+                  "video": ''
+              }
+
+              let headers = new Headers();
+              headers.append('Content-Type', 'application/json');
+
+              this.http.post(URL + '/newPost', JSON.stringify(post), { headers: headers })
+                  .subscribe(res => {
+                      //console.log(res.json());
+                      if (res.json()) {
+                          console.log(res.json());
+
+
+                      }
+                      else if (!res.json()) {
+                          console.log("nothing");
+                      }
+
+                  });
+
+
+          }).catch(err => { console.log(err); });
+      })
 
 
   }

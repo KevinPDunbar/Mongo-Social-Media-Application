@@ -1,14 +1,15 @@
 import { Component } from '@angular/core';
-import { IonicPage, NavController, NavParams } from 'ionic-angular';
+import { IonicPage, NavController, NavParams, ViewController  } from 'ionic-angular';
 import 'rxjs/add/operator/map';
 import { Http, Headers } from '@angular/http';
 import { AlertController } from 'ionic-angular';
 import { NativeStorage } from '@ionic-native/native-storage';
 
 import { NotificationsPage } from '../notifications/notifications';
+import { ViewProfilePage } from '../view-profile/view-profile'
 
 
-const URL = 'http://192.168.2.115:8000/api';
+const URL = 'http://192.168.2.125:8000/api';
 
 /**
  * Generated class for the ViewPostPage page.
@@ -34,7 +35,7 @@ export class ViewPostPage {
     public passedPostId;
     public postOwnerId;
 
-    constructor(public navCtrl: NavController, public navParams: NavParams, public http: Http, public alertCtrl: AlertController, private nativeStorage: NativeStorage) {
+    constructor(public navCtrl: NavController, public navParams: NavParams, public http: Http, public alertCtrl: AlertController, private nativeStorage: NativeStorage, private view: ViewController) {
 
         this.passedUserId = navParams.get("userId");
         console.log("PASSED USER ID : " + this.passedUserId);
@@ -70,6 +71,7 @@ export class ViewPostPage {
       this.users = [];
       this.posts = [];
       this.comments = [];
+      this.unreadNotifications = [];
       this.getPost();
       this.whoAmIFollowing();
       this.getComments();
@@ -79,6 +81,19 @@ export class ViewPostPage {
           console.log('Async operation has ended');
           refresher.complete();
       }, 2000);
+  }
+
+  viewProfile(userId) {
+      console.log("THE PASSED IN ID :" + userId);
+      // this.navCtrl.push(ViewProfilePage);
+
+      this.navCtrl.push(ViewProfilePage, {
+          userId: userId
+      })
+  }
+
+  closeModal() {
+      this.view.dismiss();
   }
 
   goToNotificationsPage() {
@@ -145,10 +160,7 @@ export class ViewPostPage {
 
                   let resp = res.json();
                   
-                  let userId
-                  let commentId;
-                  let commentText;
-                  let commentDate;
+                  
 
                   console.log("RESPONSE: " + res.json().text);
 
@@ -200,7 +212,7 @@ export class ViewPostPage {
                                   console.log("THE POSTER: " + posterName);
                                   
 
-                                  commentsClone.push({ "name": posterName, "text": commentText, "photoURL": posterPhotoUrl, "date": newDate });
+                                  commentsClone.push({ "name": posterName, "text": commentText, "photoURL": posterPhotoUrl, "date": newDate, "userId": userId });
 
                                   //postClone.name = posterName;
                                   //postClone.photoURL = posterPhotoUrl;
@@ -227,6 +239,23 @@ export class ViewPostPage {
   whoAmIFollowing() {
       let userClone = this.users;
       let postClone = this.posts;
+
+      function msToTime(s) {
+          var ms = s % 1000;
+          s = (s - ms) / 1000;
+          var secs = s % 60;
+          s = (s - secs) / 60;
+          var mins = s % 60;
+          var hrs = (s - mins) / 60;
+          if (hrs == 0 && mins == 0)
+              return 'just now';
+          else if (hrs == 0)
+              return mins + ' mins ago';
+          else if (hrs < 24)
+              return hrs + ' hours ago';
+          else
+              return Math.floor(hrs / 24) + ' days ago';
+      }
 
       let id;
       let firstName;
@@ -318,7 +347,7 @@ export class ViewPostPage {
 
                                       });
                                   //
-                                  userClone.push({ "postId": postId, "userId": userId, "name": posterName, "text": postText, "date": newDate, "score": postScore, "photoURL": posterPhotoUrl, "postPhotoURL": postPhotoURL, "likes": "", "haveILiked": "" });
+                                  userClone.push({ "postId": postId, "userId": userId, "name": posterName, "text": postText, "date": diff, "score": postScore, "photoURL": posterPhotoUrl, "postPhotoURL": postPhotoURL, "likes": "", "haveILiked": "" });
 
                                   
 
@@ -329,6 +358,11 @@ export class ViewPostPage {
 
                           });
                       //
+
+                      let now = new Date().getTime();
+                      let past = new Date(postDate).getTime();
+
+                      let diff = msToTime(now - past);
 
                       let d = new Date(postDate);
                       let day = d.getDay();
@@ -394,15 +428,42 @@ export class ViewPostPage {
       let userId = this.passedUserId;
       let postId = this.passedPostId;
       
+      let existingComments = this.comments;
 
       let date = new Date();
 
-      let comment = { "userId": userId, "postId": postId, "date": date, "text": newCommentText };
+      let comment = { "userId": this.userId, "postId": postId, "date": date, "text": newCommentText };
 
-      
 
+      //
+      //
       let headers = new Headers();
       headers.append('Content-Type', 'application/json');
+
+      let req = { "userId": this.userId };
+
+      this.http.post(URL + '/getUserById', JSON.stringify(req), { headers: headers })
+          .subscribe(res => {
+              //console.log(res.json());
+              if (res.json()) {
+                  console.log(res.json());
+
+                  let firstName = res.json().firstName;
+                  let lastName = res.json().lastName;
+                  let photoURL = res.json().profilePicture;
+
+                  let posterName = firstName + " " + lastName;
+                  let posterPhotoUrl = photoURL;
+
+                  existingComments.unshift({ "text": newCommentText, "name": posterName, "userId": this.userId, "photoURL": photoURL });
+
+              }
+              else if (!res.json()) {
+                  console.log("nothing");
+              }
+
+          });
+      //
 
       this.http.post(URL + '/newComment', JSON.stringify(comment), { headers: headers })
           .subscribe(res => {
@@ -415,7 +476,7 @@ export class ViewPostPage {
 
                   let date = new Date();
 
-                  let notification = { "recieveId": userId, "pusherId": this.passedUserId, "subject": "comment", "read": false, "commentOwnerId": this.postOwnerId, "postId": this.passedPostId, "date": date };
+                  let notification = { "recieveId": userId, "pusherId": this.userId, "subject": "comment", "read": false, "commentOwnerId": this.postOwnerId, "postId": this.passedPostId, "date": date };
 
                   this.http.post(URL + '/newNotification', JSON.stringify(notification), { headers: headers })
                       .subscribe(res => {

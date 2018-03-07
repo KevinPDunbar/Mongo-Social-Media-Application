@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { NativeStorage } from '@ionic-native/native-storage';
-import { IonicPage, NavController, NavParams } from 'ionic-angular';
+import { IonicPage, NavController, NavParams, ModalController, ModalOptions   } from 'ionic-angular';
 import 'rxjs/add/operator/map';
 import { Http, Headers } from '@angular/http';
 
@@ -9,7 +9,7 @@ import { NotificationsPage } from '../notifications/notifications';
 import { ViewPostPage } from '../view-post/view-post';
 
 
-const URL = 'http://192.168.2.115:8000/api';
+const URL = 'http://192.168.2.125:8000/api';
 
 /**
  * Generated class for the MyProfilePage page.
@@ -34,7 +34,7 @@ export class MyProfilePage {
     usersName: String;
     usersPhoto: String;
 
-    constructor(public navCtrl: NavController, public navParams: NavParams, private nativeStorage: NativeStorage, public http: Http) {
+    constructor(public navCtrl: NavController, public navParams: NavParams, private nativeStorage: NativeStorage, public http: Http, private modal: ModalController) {
 
 
   }
@@ -56,6 +56,21 @@ export class MyProfilePage {
           }
         
           )
+  }
+
+  openModal(userId, postId) {
+
+      const options: ModalOptions = {
+          showBackdrop: true,
+          enableBackdropDismiss: true,
+          enterAnimation: 'modal-scale-up-enter',
+          leaveAnimation: 'modal-scale-up-leave',
+
+      }
+
+      const myModal = this.modal.create(ViewPostPage, { userId, postId }, options);
+
+      myModal.present();
   }
 
   goToNotificationsPage() {
@@ -164,6 +179,23 @@ export class MyProfilePage {
       let date;
       let image;
 
+      function msToTime(s) {
+          var ms = s % 1000;
+          s = (s - ms) / 1000;
+          var secs = s % 60;
+          s = (s - secs) / 60;
+          var mins = s % 60;
+          var hrs = (s - mins) / 60;
+          if (hrs == 0 && mins == 0)
+              return 'just now';
+          else if (hrs == 0)
+              return mins + ' mins ago';
+          else if (hrs < 24)
+              return hrs + ' hours ago';
+          else
+              return Math.floor(hrs / 24) + ' days ago';
+      }
+
       let req = { "userId": this.userId };
 
       let postClone = this.posts;
@@ -195,6 +227,11 @@ export class MyProfilePage {
                       let year = d.getFullYear();
 
                       let newDate = day + '/' + month + '/' + year;
+
+                      let now = new Date().getTime();
+                      let past = new Date(date).getTime();
+
+                      let diff = msToTime(now - past);
 
                       let reqq = { "_id": postId };
 
@@ -241,7 +278,7 @@ export class MyProfilePage {
 
 
                       let name = "test Name";
-                      postClone.push({ "postId": postId, "name": this.usersName, "text": text, "date": date, "score": score, "photoURL": this.usersPhoto, "commentLength": 0, "postPhotoURL": image, "likes": "", "haveILiked": "" });
+                      postClone.push({ "postId": postId, "name": this.usersName, "text": text, "date": diff, "score": score, "photoURL": this.usersPhoto, "commentLength": 0, "postPhotoURL": image, "likes": "", "haveILiked": "" });
                   }
                   
                   

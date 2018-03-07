@@ -21,7 +21,15 @@ import { NotificationsPage } from '../pages/notifications/notifications';
 import { NativeStorage } from '@ionic-native/native-storage';
 import { Camera, CameraOptions } from '@ionic-native/camera';
 
+import { MediaCapture, MediaFile, CaptureError, CaptureImageOptions } from '@ionic-native/media-capture';
+import { Media, MediaObject } from '@ionic-native/media';
+import { File } from '@ionic-native/file';
+import { StreamingMedia } from '@ionic-native/streaming-media';
+import { VideoEditor } from '@ionic-native/video-editor';
 
+import { Config } from 'ionic-angular';
+import { ModalScaleUpEnterTransition } from '../scale-up-enter.transition';
+import { ModalScaleUpLeaveTransition } from '../scale-up-leave.transition';
 
 @NgModule({
   declarations: [
@@ -66,7 +74,21 @@ import { Camera, CameraOptions } from '@ionic-native/camera';
       AuthDataProvider,
       NativeStorage,
       Camera,
+      MediaCapture,
+      Media,
+      StreamingMedia,
+      File,
+      VideoEditor,
       { provide: ErrorHandler, useClass: IonicErrorHandler }
   ]
 })
-export class AppModule {}
+export class AppModule {
+    constructor(public config: Config) {
+        this.setCustomTransitions();
+    }
+
+    private setCustomTransitions() {
+        this.config.setTransition('modal-scale-up-leave', ModalScaleUpLeaveTransition);
+        this.config.setTransition('modal-scale-up-enter', ModalScaleUpEnterTransition);
+    }
+}

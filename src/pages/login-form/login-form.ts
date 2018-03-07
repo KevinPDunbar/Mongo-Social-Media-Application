@@ -18,7 +18,7 @@ import { SignupPage } from '../signup/signup';
 import { FeedPage } from '../feed/feed';
 
 
-const URL = 'http://192.168.43.226:8000/api';
+const URL = 'http://192.168.2.125:8000/api';
 
 @IonicPage()
 @Component({

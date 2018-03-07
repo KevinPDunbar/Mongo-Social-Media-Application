@@ -1,13 +1,13 @@
 import { Component } from '@angular/core';
 import 'rxjs/add/operator/map';
 import { Http, Headers } from '@angular/http';
-import { IonicPage, NavController, NavParams } from 'ionic-angular';
+import { IonicPage, NavController, NavParams, ModalController, ModalOptions   } from 'ionic-angular';
 import { NativeStorage } from '@ionic-native/native-storage';
 import { NotificationsPage } from '../notifications/notifications';
 import { ViewPostPage } from '../view-post/view-post';
 
 
-const URL = 'http://192.168.2.115:8000/api';
+const URL = 'http://192.168.2.125:8000/api';
 /**
  * Generated class for the ViewProfilePage page.
  *
@@ -36,7 +36,7 @@ export class ViewProfilePage {
     public usersName;
     public usersPhoto;
 
-    constructor(public navCtrl: NavController, public navParams: NavParams, public http: Http, private nativeStorage: NativeStorage) {
+    constructor(public navCtrl: NavController, public navParams: NavParams, public http: Http, private nativeStorage: NativeStorage, private modal: ModalController) {
 
         this.passedUserId = navParams.get("userId");
         console.log("PASSED USER ID : " + this.passedUserId);
@@ -81,16 +81,31 @@ export class ViewProfilePage {
       }, 2000);
   }
 
+  openModal(userId, postId) {
+
+      const options: ModalOptions = {
+          showBackdrop: true,
+          enableBackdropDismiss: true,
+          enterAnimation: 'modal-scale-up-enter',
+          leaveAnimation: 'modal-scale-up-leave',
+
+      }
+
+      const myModal = this.modal.create(ViewPostPage, { userId, postId }, options);
+
+      myModal.present();
+  }
+
   goToNotificationsPage() {
       this.navCtrl.push(NotificationsPage);
   }
 
   getUnreadCount() {
 
-      let myId = this.userId;
+      //let myId = this.userId;
       let unreadClone = this.unreadNotifications;
 
-      let req = { "userId": this.userId };
+      let req = { "userId": this.myId };
 
 
       let headers = new Headers();
@@ -165,6 +180,23 @@ export class ViewProfilePage {
       let postUserId;
       let postPhotoURL;
 
+      function msToTime(s) {
+          var ms = s % 1000;
+          s = (s - ms) / 1000;
+          var secs = s % 60;
+          s = (s - secs) / 60;
+          var mins = s % 60;
+          var hrs = (s - mins) / 60;
+          if (hrs == 0 && mins == 0)
+              return 'just now';
+          else if (hrs == 0)
+              return mins + ' mins ago';
+          else if (hrs < 24)
+              return hrs + ' hours ago';
+          else
+              return Math.floor(hrs / 24) + ' days ago';
+      }
+
       let req = { "userId": this.userId };
 
       let postClone = this.posts;
@@ -196,6 +228,11 @@ export class ViewProfilePage {
                       let year = d.getFullYear();
 
                       let newDate = day + '/' + month + '/' + year;
+
+                      let now = new Date().getTime();
+                      let past = new Date(date).getTime();
+
+                      let diff = msToTime(now - past);
 
                       //
                       let reqq = { "_id": postId };
@@ -241,7 +278,7 @@ export class ViewProfilePage {
 
                           });
                       //
-                      postClone.push({ "postId": postId, "name": this.usersName, "text": text, "date": newDate, "score": score, "postPhotoURL": postPhotoURL, "photoURL": this.usersPhoto, "likes": "", "haveILiked": "", "userId": postUserId });
+                      postClone.push({ "postId": postId, "name": this.usersName, "text": text, "date": diff, "score": score, "postPhotoURL": postPhotoURL, "photoURL": this.usersPhoto, "likes": "", "haveILiked": "", "userId": postUserId });
                   }
 
 

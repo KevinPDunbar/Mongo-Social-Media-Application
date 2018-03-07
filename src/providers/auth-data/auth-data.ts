@@ -13,7 +13,7 @@ import { LoginFormPage } from '../../pages/login-form/login-form';
 import { FeedPage } from '../../pages/feed/feed';
 
 
-const URL = 'http://192.168.2.115:8000/api';
+const URL = 'http://192.168.2.125:8000/api';
 
 /*
   Generated class for the AuthDataProvider provider.

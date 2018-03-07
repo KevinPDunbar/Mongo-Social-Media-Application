@@ -8,7 +8,7 @@ import { ViewProfilePage } from '../view-profile/view-profile';
 import { ViewPostPage } from '../view-post/view-post';
 
 
-const URL = 'http://192.168.2.115:8000/api';
+const URL = 'http://192.168.2.125:8000/api';
 
 /**
  * Generated class for the NotificationsPage page.
@@ -63,7 +63,12 @@ export class NotificationsPage {
       console.log("THE PASSED IN ID :" + commentOwnerId);
       console.log("THE PASSED IN POST ID : " + postId);
 
-      //firebase.database().ref('/Notifications/' + notificationId).child('read').set(true);
+      for (let i = 0; i < this.notifications.length; i++) {
+          if (this.notifications[i].notificationId === notificationId) {
+              this.notifications[i].read = true;
+              break;
+          }
+      }
 
       console.log("The notifications ID is: " + notificationId);
       let req = { "_id": notificationId };
@@ -92,7 +97,13 @@ export class NotificationsPage {
 
   viewProfile(pusherId, notificationId) {
       console.log("TPusher ID :" + pusherId);
-      // this.navCtrl.push(ViewProfilePage);
+
+      for (let i = 0; i < this.notifications.length; i++) {
+          if (this.notifications[i].notificationId === notificationId) {
+              this.notifications[i].read = true;
+              break;
+          }
+      }
 
       console.log("The notifications ID is: " + notificationId);
       let req = { "_id": notificationId };

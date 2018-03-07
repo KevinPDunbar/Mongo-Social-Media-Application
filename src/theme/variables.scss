@@ -12,6 +12,30 @@ $font-path: "../assets/fonts";
 // To view all the possible Ionic variables, see:
 // http://ionicframework.com/docs/v2/theming/overriding-ionic-variables/
 
+.loginForm {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+}
+
+.postInteractionIcons {
+  margin-bottom: -15px;
+}
+
+.commentIcon {
+  float: right;
+  margin: 0.4rem 0.2rem;
+  color: grey !important;
+  background-color: white !important;
+  box-shadow: none !important;
+}
+
+.modalCloseButton {
+  color: white;
+  text-shadow: none;
+  box-shadow: none !important;
+}
+
 .likedPost {
   color: red !important;
   background-color: white !important;

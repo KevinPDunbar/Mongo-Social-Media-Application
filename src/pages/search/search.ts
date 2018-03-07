@@ -8,7 +8,7 @@ import { MyProfilePage } from '../my-profile/my-profile';
 import { NotificationsPage } from '../notifications/notifications';
 
 
-const URL = 'http://192.168.2.115:8000/api';
+const URL = 'http://192.168.2.125:8000/api';
 
 /**
  * Generated class for the SearchPage page.

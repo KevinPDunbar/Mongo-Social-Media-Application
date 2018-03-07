@@ -19,37 +19,44 @@
     </ion-refresher-content>
   </ion-refresher>
 
-
   <ion-card margin-top class="whiteBackground" *ngFor="let item of items">
 
 
-    <ion-item class="whiteBackground">
+    <ion-item class="whiteBackground" (click)="viewProfile(item.userId)">
       <ion-avatar item-left>
         <img src={{item.photoURL}} />
       </ion-avatar>
-      <h2 (click)="viewProfile(item.userId)">{{item.name}}</h2>
+      <h2 >{{item.name}}</h2>
       <p>{{item.date}}</p>
     </ion-item>
 
 
 
     <ion-card-content>
-      <p>{{item.text}}</p>
-      <img src={{item.postPhotoURL}} *ngIf="item.postPhotoURL">
+      <section (click)="openModal(item.userId, item.postId)">
+        <p>{{item.text}}</p>
+        <img src={{item.postPhotoURL}} *ngIf="item.postPhotoURL">
+      </section>
 
-      <button *ngIf="item.haveILiked === true" [ngClass]="item.haveILiked === true ? 'likedPost': ''" (click)="unlikePost(item, item.userId, item.postId)" ion-button icon-only>
-        <ion-icon name="heart"></ion-icon>
-        <p>{{item.score}}</p>
-      </button>
+      <section class="postInteractionIcons">
+        <button *ngIf="item.haveILiked === true" [ngClass]="item.haveILiked === true ? 'likedPost': ''" (click)="unlikePost(item, item.userId, item.postId)" ion-button icon-only>
+          <ion-icon name="heart"></ion-icon>
+          <p>{{item.score}}</p>
+        </button>
 
-      <button *ngIf="item.haveILiked === false" [ngClass]="item.haveILiked === false ? 'notLikedPost': ''" (click)="likePost(item, item.userId, item.postId)" ion-button icon-only>
-        <ion-icon name="heart"></ion-icon>
-        <p>{{item.score}}</p>
-      </button>
+        <button *ngIf="item.haveILiked === false" [ngClass]="item.haveILiked === false ? 'notLikedPost': ''" (click)="likePost(item, item.userId, item.postId)" ion-button icon-only>
+          <ion-icon name="heart"></ion-icon>
+          <p>{{item.score}}</p>
+        </button>
 
-      <ion-badge style="float: right;" (click)="viewPost(item.userId, item.postId)" item-end>Replies {{item.commentLength}}</ion-badge>
+        <button class="commentIcon" (click)="openModal(item.userId, item.postId)" ion-button icon-only>
+          <ion-icon class="commentIcon" name="md-text"></ion-icon>
+          <p *ngIf="item.commentLength > 0">{{item.commentLength}}</p>
+          <p style="color: white;" *ngIf="item.commentLength === 0">0</p>
+        </button>
+      </section>
 
-    </ion-card-content>
+</ion-card-content>
 
 
   </ion-card>

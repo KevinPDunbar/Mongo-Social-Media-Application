@@ -51,20 +51,28 @@
     </ion-item>
 
     <ion-card-content>
-      <p>{{post.text}}</p>
-      <img class="postImage" src={{post.postPhotoURL}} *ngIf="post.postPhotoURL">
+      <section (click)="openModal(post.userId, post.postId)">
+        <p>{{post.text}}</p>
+        <img class="postImage" src={{post.postPhotoURL}} *ngIf="post.postPhotoURL">
+      </section>
+      <section class="postInteractionIcons">
+        <button *ngIf="post.haveILiked === true" [ngClass]="post.haveILiked === true ? 'likedPost': ''" (click)="unlikePost(post, post.userId, post.postId)" ion-button icon-only>
+          <ion-icon name="heart"></ion-icon>
+          <p>{{post.score}}</p>
+        </button>
 
-      <button *ngIf="post.haveILiked === true" [ngClass]="post.haveILiked === true ? 'likedPost': ''" (click)="unlikePost(post, post.userId, post.postId)" ion-button icon-only>
-        <ion-icon name="heart"></ion-icon>
-        <p>{{post.score}}</p>
-      </button>
+        <button *ngIf="post.haveILiked === false" [ngClass]="post.haveILiked === false ? 'notLikedPost': ''" (click)="likePost(post, post.userId, post.postId)" ion-button icon-only>
+          <ion-icon name="heart"></ion-icon>
+          <p>{{post.score}}</p>
+        </button>
 
-      <button *ngIf="post.haveILiked === false" [ngClass]="post.haveILiked === false ? 'notLikedPost': ''" (click)="likePost(post, post.userId, post.postId)" ion-button icon-only>
-        <ion-icon name="heart"></ion-icon>
-        <p>{{post.score}}</p>
-      </button>
+        <button class="commentIcon" (click)="openModal(post.userId, post.postId)" ion-button icon-only>
+          <ion-icon class="commentIcon" name="md-text"></ion-icon>
+          <p *ngIf="post.commentLength > 0">{{post.commentLength}}</p>
+          <p style="color: white;" *ngIf="post.commentLength === 0">0</p>
+        </button>
+      </section>
 
-      <ion-badge style="float: right;" (click)="viewPost(post.userId, post.postId)" item-end>Replies {{post.commentLength}}</ion-badge>
     </ion-card-content>
   </ion-card>
 

@@ -8,7 +8,7 @@
 
 <ion-content padding-top margin-top id="login">
 
-  <form [formGroup]="loginForm" (submit)="loginUser()" novalidate>
+  <form class="loginForm" [formGroup]="loginForm" (submit)="loginUser()" novalidate>
     <!--divs-->
     <div class="row responsive-md">
       <div class="col col-50 col-offset-25">
@@ -41,9 +41,6 @@
           Create a new account
         </button>
 
-        <button ion-button block clear (click)="goToResetPassword()">
-          I forgot my password
-        </button>
 
       </div>
     </div>
